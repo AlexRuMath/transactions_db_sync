@@ -2,7 +2,9 @@ package edu.mipt.accounts.dblock;
 
 import edu.mipt.accounts.Accounts;
 import lombok.RequiredArgsConstructor;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -13,7 +15,8 @@ public class DbSynchronizedAccounts implements Accounts {
     private final AccountRepository accountRepository;
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    @Retryable(maxAttempts = 10)
     public void transfer(long fromAccountId, long toAccountId, long amount) {
         var fromAccount = accountRepository.findById(fromAccountId);
         var toAccount = accountRepository.findById(toAccountId);
