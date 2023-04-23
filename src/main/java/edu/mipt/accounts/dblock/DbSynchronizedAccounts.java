@@ -1,11 +1,11 @@
 package edu.mipt.accounts.dblock;
 
 import edu.mipt.accounts.Accounts;
+import edu.mipt.accounts.transaction.TransferTransaction;
 import lombok.RequiredArgsConstructor;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -14,17 +14,16 @@ public class DbSynchronizedAccounts implements Accounts {
 
     @Override
     @Transactional
+    @Retryable
     public void transfer(long fromAccountId, long toAccountId, long amount) {
+        if(fromAccountId == toAccountId) return;
+
         var fromAccount = accountRepository.findById(fromAccountId);
         var toAccount = accountRepository.findById(toAccountId);
 
-        doTransfer(fromAccount, toAccount, amount);
-    }
+        var transferTransaction = new TransferTransaction(accountRepository, fromAccount, toAccount, amount);
+        var lock = new DynamicLock();
 
-    private void doTransfer(Account fromAccount, Account toAccount, long value) {
-        fromAccount.withdraw(value);
-        toAccount.deposit(value);
-
-        accountRepository.saveAllAndFlush(List.of(fromAccount, toAccount));
+        lock.exec(transferTransaction, fromAccount, toAccount);
     }
 }
