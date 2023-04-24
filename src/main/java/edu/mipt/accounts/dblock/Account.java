@@ -2,8 +2,8 @@ package edu.mipt.accounts.dblock;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.Data;
-import org.springframework.data.annotation.Version;
 
 @Data
 @Entity
@@ -12,7 +12,7 @@ public class Account {
     private long id;
 
     @Version
-    private long version;
+    private Long version;
 
     private long balance;
 
