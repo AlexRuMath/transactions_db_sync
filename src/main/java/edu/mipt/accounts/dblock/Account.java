@@ -9,6 +9,7 @@ import lombok.Data;
 public class Account {
     @Id
     private long id;
+
     private long balance;
 
     public Account() {
